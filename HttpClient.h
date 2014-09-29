@@ -4,6 +4,7 @@
 #include "spark_wiring_string.h"
 #include "spark_wiring_tcpclient.h"
 #include "spark_wiring_usbserial.h"
+#include "spark_wiring_printable.h"
 
 /**
  * Defines for the HTTP methods.
@@ -12,6 +13,8 @@ static const char* HTTP_METHOD_GET    = "GET";
 static const char* HTTP_METHOD_POST   = "POST";
 static const char* HTTP_METHOD_PUT    = "PUT";
 static const char* HTTP_METHOD_DELETE = "DELETE";
+
+static const size_t HTTP_CLIENT_BUFFER_SIZE = 2048;
 
 /**
  * This struct is used to pass additional HTTP headers such as API-keys.
@@ -32,12 +35,10 @@ typedef struct
  */
 typedef struct
 {
-  String hostname;
-  String path;
-  // TODO: Look at setting the port by default.
-  //int port = 80;
-  int port;
-  String body;
+  IPAddress* hostname;
+  char* path;
+  uint16_t port;
+  char* body;
 } http_request_t;
 
 /**
@@ -48,21 +49,18 @@ typedef struct
 typedef struct
 {
   int status;
-  String body;
+  char* body;
 } http_response_t;
 
 class HttpClient {
-public:
-    /**
-    * Public references to variables.
-    */
-    TCPClient client;
-    char buffer[1024];
 
-    /**
-    * Constructor.
-    */
+  public:
+
     HttpClient(void);
+
+    TCPClient client;
+
+    char buffer[HTTP_CLIENT_BUFFER_SIZE];
 
     /**
     * HTTP request methods.
@@ -108,14 +106,12 @@ public:
         request(aRequest, aResponse, headers, HTTP_METHOD_DELETE);
     }
 
-private:
-    /**
-    * Underlying HTTP methods.
-    */
+  private:
     void request(http_request_t &aRequest, http_response_t &aResponse, http_header_t headers[], const char* aHttpMethod);
     void sendHeader(const char* aHeaderName, const char* aHeaderValue);
     void sendHeader(const char* aHeaderName, const int aHeaderValue);
     void sendHeader(const char* aHeaderName);
+    void sendHeader(const char* aHeaderName, const Printable& aHeaderValue);
 };
 
 #endif /* __HTTP_CLIENT_H_ */
